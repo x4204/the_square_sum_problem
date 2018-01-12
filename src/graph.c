@@ -1,5 +1,4 @@
 #include <stdio.h>
-// ^^^~ for testing
 #include <stdlib.h>
 #include <math.h>
 #include "graph.h"

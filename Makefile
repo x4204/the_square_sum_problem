@@ -1,6 +1,6 @@
 NAME=square_sum_problem
 CC=gcc
-CFLAGS=-Wall -Wextra -Werror -lm
+CFLAGS=-Wall -Wextra -Werror -std=c99
 SRC_DIR=./src
 OBJ_DIR=./obj
 SRC=$(wildcard $(SRC_DIR)/*.c)
@@ -10,7 +10,7 @@ INCLUDES=-Iincludes
 all: $(NAME)
 
 $(NAME): $(OBJ_DIR) $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME) -lm
 
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)

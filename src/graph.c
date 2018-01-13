@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include "graph.h"
 
 static t_node *node_new(size_t value)

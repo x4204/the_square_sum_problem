@@ -1,6 +1,8 @@
 #ifndef GRAPH_H
 # define GRAPH_H
 
+# include <math.h>
+
 # define DEF_FR_COUNT 5							// default friend count
 
 typedef struct		s_node

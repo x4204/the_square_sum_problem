@@ -52,16 +52,6 @@ static void make_friends(t_node **arr, size_t count)
 				friends_handshake(arr[i], arr[j]);
 }
 
-static unsigned char all_nodes_are_visited(t_node **arr, size_t count)
-{
-	size_t visited_count = 0;
-
-	for (size_t i = 0; i < count; i++)
-		if (arr[i]->visited)
-			visited_count++;
-	return (visited_count == count);
-}
-
 static unsigned char all_friends_are_visited(t_node *elem)
 {
 	size_t visited_count = 0;
@@ -72,64 +62,46 @@ static unsigned char all_friends_are_visited(t_node *elem)
 	return (visited_count == elem->friendCount);
 }
 
-static void chain_push(t_chain **stk, size_t value)
+static t_stack *stack_alloc(size_t count)
 {
-	t_chain *elem;
+	t_stack *ret;
 
-	elem = (t_chain *)malloc(sizeof(t_chain));
-	elem->value = value;
-	elem->next = NULL;
-
-	t_chain *head = *stk;
-	if (!head)
-		*stk = elem;
-	else
-	{
-		while (head->next)
-			head = head->next;
-		head->next = elem;
-	}
+	ret = (t_stack *)malloc(sizeof(t_stack));
+	ret->nodes = (t_node **)malloc(sizeof(t_node *) * count);
+	ret->len = 0;
+	return (ret);
 }
 
-static void chain_pop(t_chain **stk)
+static void stack_push(t_stack *stk, t_node *node)
 {
-	t_chain *current = *stk;
-
-	if (!current)
-		return ;
-	if (!current->next)
-	{
-		*stk = NULL;
-		free(current);
-		return ;
-	}
-	while (current->next->next)
-		current = current->next;
-	free(current->next);
-	current->next = NULL;
+	stk->nodes[stk->len] = node;
+	stk->len++;
 }
 
-static void chain_copy(t_chain **dest, t_chain *src)
+static void stack_pop(t_stack *stk)
 {
-	while (src)
-	{
-		chain_push(dest, src->value);
-		src = src->next;
-	}
+	if (stk->len > 0)
+		stk->len--;
 }
 
-static int valid_chain(t_node **arr, size_t count, t_chain *stk, t_chain **sol, size_t index)
+static void stack_copy(t_stack **dest, t_stack *src)
 {
-	chain_push(&stk, arr[index]->value);
+	for (size_t i = 0; i < src->len; i++)
+		stack_push(*dest, src->nodes[i]);
+}
+
+static int valid_chain(t_node **arr, size_t count, t_stack *stk, t_stack **sol, size_t index)
+{
+	stack_push(stk, arr[index]);
 	arr[index]->visited = 1;
-	if (all_nodes_are_visited(arr, count))
+	if (stk->len == count)
 	{
-  	chain_copy(sol, stk);
+  	stack_copy(sol, stk);
 		return (1);
 	}
 	if (arr[index]->friendCount == 0 || all_friends_are_visited(arr[index]))
 	{
-		chain_pop(&stk);
+		stack_pop(stk);
 		arr[index]->visited = 0;
 		return (0);
 	}
@@ -137,33 +109,49 @@ static int valid_chain(t_node **arr, size_t count, t_chain *stk, t_chain **sol, 
 		if (!arr[index]->friends[i]->visited)
 			if (valid_chain(arr, count, stk, sol, arr[index]->friends[i]->value - 1))
 				return (1);
-	chain_pop(&stk);
+	stack_pop(stk);
 	arr[index]->visited = 0;
 	return (0);
 }
 
-void print_chain(t_chain *stk)
+void print_stack(t_stack *stk)
 {
-	if (!stk)
+	if (stk->len == 0)
 	{
-		printf("Empty chain\n");
+		printf("Empty stack\n");
 		return ;
 	}
-	while (stk)
-	{
-		printf("%lu ", stk->value);
-		stk = stk->next;
-	}
+	for (size_t i = 0; i < stk->len; i++)
+		printf("%u ", stk->nodes[i]->value);
 	printf("\n");
+	(void)stk;
 }
 
-t_chain	*create_chain(size_t count)
+// for debug
+void ptarr(t_node **arr, size_t count)
+{
+	for (size_t i = 0; i < count; i++)
+	{
+		printf("---------------------------\n");
+		printf("[%lu]\n", i);
+		printf("\tValue: %u\n", arr[i]->value);
+		printf("\tFriend Count: %u\n", arr[i]->friendCount);
+		printf("\tFriends: ");
+		for (size_t j = 0; j < arr[i]->friendCount; j++)
+			printf("%u ", arr[i]->friends[j]->value);
+		printf("\n---------------------------\n");
+	}
+}
+
+t_stack	*create_chain(size_t count)
 {
 	t_node **arr;
-	t_chain *stk = NULL;
-	t_chain *sol = NULL;
+	t_stack *stk;
+	t_stack *sol;
 
 	arr = create_node_arr(count);
+	stk = stack_alloc(count);
+	sol = stack_alloc(count);
 	make_friends(arr, count);
 	// ptarr(arr, count); // debug
 	for (size_t i = 0; i < count; i++)

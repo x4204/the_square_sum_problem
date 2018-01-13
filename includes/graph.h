@@ -13,13 +13,13 @@ typedef struct		s_node
 	struct s_node		**friends;
 }									t_node;
 
-typedef struct		s_chain
+typedef struct		s_stack
 {
-	size_t					value;
-	struct s_chain	*next;
-}									t_chain;
+	size_t					len;
+	t_node					**nodes;
+}									t_stack;
 
-t_chain	*create_chain(size_t count);
-void		print_chain(t_chain *stk);
+t_stack	*create_chain(size_t count);
+void		print_stack(t_stack *stk);
 
 #endif

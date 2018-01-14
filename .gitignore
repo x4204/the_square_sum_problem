@@ -1,3 +1,5 @@
 compile.sh
+test
 test_original
 test_perf_improv
+test_perf_upgr_sort

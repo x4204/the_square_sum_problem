@@ -23,6 +23,15 @@ static t_node **create_node_arr(size_t count)
 	return (arr);
 }
 
+static size_t *create_index(t_node **arr, size_t count)
+{
+	size_t *ret = (size_t *)malloc(sizeof(size_t) * count);
+
+	for (size_t i = 0; i < count; i++)
+		ret[arr[i]->value - 1] = i;
+	return (ret);
+}
+
 static unsigned char is_perfect_square(size_t num)
 {
 	double res;
@@ -50,6 +59,23 @@ static void make_friends(t_node **arr, size_t count)
 		for (size_t j = i + 1; j < count; j++)
 			if (is_perfect_square(arr[i]->value + arr[j]->value))
 				friends_handshake(arr[i], arr[j]);
+}
+
+static void sort_by_friend_count(t_node **arr, size_t count) // shell sort
+{
+	size_t gaps[6] = { 63, 31, 15, 7, 3, 1 };
+	size_t gap_count = 6;
+	size_t j;
+	t_node *temp;
+
+	for (size_t gi = 0; gi < gap_count; gi++)
+		for (size_t i = gaps[gi]; i < count; i++)
+		{
+			temp = arr[i];
+			for (j = i; j >= gaps[gi] && arr[j - gaps[gi]]->friendCount > temp->friendCount; j -= gaps[gi])
+				arr[j] = arr[j - gaps[gi]];
+			arr[j] = temp;
+		}
 }
 
 static unsigned char all_friends_are_visited(t_node *elem)
@@ -86,11 +112,12 @@ static void stack_pop(t_stack *stk)
 
 static void stack_copy(t_stack **dest, t_stack *src)
 {
+	(*dest)->len = src->len;
 	for (size_t i = 0; i < src->len; i++)
-		stack_push(*dest, src->nodes[i]);
+		(*dest)->nodes[i] = src->nodes[i];
 }
 
-static int valid_chain(t_node **arr, size_t count, t_stack *stk, t_stack **sol, size_t index)
+static int valid_chain(t_node **arr, size_t *index_arr, size_t count, t_stack *stk, t_stack **sol, size_t index)
 {
 	stack_push(stk, arr[index]);
 	arr[index]->visited = 1;
@@ -107,7 +134,7 @@ static int valid_chain(t_node **arr, size_t count, t_stack *stk, t_stack **sol, 
 	}
 	for (size_t i = 0; i < arr[index]->friendCount; i++)
 		if (!arr[index]->friends[i]->visited)
-			if (valid_chain(arr, count, stk, sol, arr[index]->friends[i]->value - 1))
+			if (valid_chain(arr, index_arr, count, stk, sol, index_arr[arr[index]->friends[i]->value - 1]))
 				return (1);
 	stack_pop(stk);
 	arr[index]->visited = 0;
@@ -133,7 +160,7 @@ void ptarr(t_node **arr, size_t count)
 	for (size_t i = 0; i < count; i++)
 	{
 		printf("---------------------------\n");
-		printf("[%lu]\n", i);
+		// printf("[%lu]\n", i);
 		printf("\tValue: %u\n", arr[i]->value);
 		printf("\tFriend Count: %u\n", arr[i]->friendCount);
 		printf("\tFriends: ");
@@ -148,14 +175,18 @@ t_stack	*create_chain(size_t count)
 	t_node **arr;
 	t_stack *stk;
 	t_stack *sol;
+	size_t *index_arr;
 
 	arr = create_node_arr(count);
+	make_friends(arr, count);
+	sort_by_friend_count(arr, count);
+	index_arr = create_index(arr, count);
+
 	stk = stack_alloc(count);
 	sol = stack_alloc(count);
-	make_friends(arr, count);
 	// ptarr(arr, count); // debug
 	for (size_t i = 0; i < count; i++)
-		if (valid_chain(arr, count, stk, &sol, i))
+		if (valid_chain(arr, index_arr, count, stk, &sol, i))
 			return (sol);
 	return (NULL);
 }
